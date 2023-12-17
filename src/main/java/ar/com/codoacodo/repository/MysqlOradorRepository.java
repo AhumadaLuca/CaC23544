@@ -90,8 +90,9 @@ public class MysqlOradorRepository implements OradorRepository {
 	public void update(Orador orador) {
 
 		// 2 : Preparo el sql - sql injection!
-		String sql = "update orador set nombre=?, apellido=?, mail=?, tema=?, where id = ?";
-
+		String sql = "update orador "
+				+ "set nombre=?, apellido=?, mail=?, tema=? "
+				+ "where id_orador = ?";
 		// try with resources
 		// Colocando la apertura de la conexion acá, nos ahorramos de cerrarla nosotros
 		try (Connection con = AdministradorDeConexiones.getConnection()) {
@@ -107,7 +108,7 @@ public class MysqlOradorRepository implements OradorRepository {
 			statement.executeUpdate(); // SELECT
 
 		} catch (Exception e) {
-			throw new IllegalArgumentException("No se pudo buscar el orador: ", e);
+			throw new IllegalArgumentException("No se pudo actualizar el orador: ", e);
 		}
 
 	}
@@ -116,16 +117,17 @@ public class MysqlOradorRepository implements OradorRepository {
 	public void delete(Long id) {
 
 		// 2 : Preparo el sql - sql injection!
-		String sql = "delete from orador where id = ?";
+		String sql = "delete from orador where id_orador = ?";
 
 		// try with resources
 		// Colocando la apertura de la conexion acá, nos ahorramos de cerrarla nosotros
 		try (Connection con = AdministradorDeConexiones.getConnection()) {
 
 			PreparedStatement statement = con.prepareStatement(sql);
+			
 			statement.setLong(1, id);
 
-			statement.executeUpdate(); // SELECT
+			statement.executeUpdate();
 
 		} catch (Exception e) {
 			throw new IllegalArgumentException("No se pudo eliminar el orador: ", e);

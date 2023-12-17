@@ -9,9 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import ar.com.codoacodo.entity.Comprador;
 import ar.com.codoacodo.entity.Orador;
-import ar.com.codoacodo.repository.MysqlOradorRepository;
-import ar.com.codoacodo.repository.OradorRepository;
+import ar.com.codoacodo.repository.MysqlCompradorRepository;
+import ar.com.codoacodo.repository.CompradorRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,10 +20,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 //http://localhost:8080/web-app-23544/api/orador/nuevo
-@WebServlet("/api/orador")
-public class NuevoOradorController extends HttpServlet{
+@WebServlet("/api/comprador")
+public class NuevoCompradorController extends AppBaseServlet{
 	
-	private OradorRepository repo = new MysqlOradorRepository();
+	private CompradorRepository repo = new MysqlCompradorRepository();
 	
 	//Crear?? GET O POST?
 	@Override
@@ -30,39 +31,30 @@ public class NuevoOradorController extends HttpServlet{
 			throws ServletException, IOException {
 		
 		//Obtengo el json desde el frontend
-		String jsonOrador = request.getReader()
-				.lines()
-				.collect(Collectors.joining(System.lineSeparator()));//spring
-		
-		//Convertimos de json String a Objeto java usando libreria jackson2
-		//Hacemos un ObjectMapper
-		ObjectMapper mapper = new ObjectMapper();
-		
-		//Estas 2 lineas nos permite convertir las respuestas de LocalDate
-		//Y permitir la escritura de TIMESTAMPS
-		mapper.registerModule(new JavaTimeModule());
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		String jsonComprador = super.toJson(request);
 		
 		//Esto finalmente nos convierte el Json a Objeto
-		OradorRequest oR = mapper.readValue(jsonOrador, OradorRequest.class);
+		CompradorRequest oR = mapper.readValue(jsonComprador, CompradorRequest.class);
 		
 		
 		//Creamos el orador con los parametros nuevos
-		Orador orador = new Orador(
-				oR.getNombre(), 
-				oR.getApellido(), 
-				oR.getMail(), 
-				oR.getTema(), 
+		Comprador comprador = new Comprador(
+				oR.getNombre(),
+				oR.getApellido(),
+				oR.getEmail(),
+				oR.getCantidad(),
+				oR.getCategoria(),
+				oR.getPrecioTotal(),
 				LocalDate.now());
 				
+				
 		//Ahora por medio del repository guardamos en la db
-		OradorRepository repo = new MysqlOradorRepository();
-		this.repo.save(orador);
+		this.repo.save(comprador);
 		
 		
 		//Convierto ahora Objeto java a String/Json
 		//Enviar por medio de response al front
-		String jsonParaEnviarAlFrontend = mapper.writeValueAsString(orador);
+		String jsonParaEnviarAlFrontend = mapper.writeValueAsString(comprador);
 		response.getWriter().print(jsonParaEnviarAlFrontend);
 	}
 	
@@ -70,11 +62,7 @@ public class NuevoOradorController extends HttpServlet{
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		
-		List<Orador> listado = this.repo.findAll();
-		
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		List<Comprador> listado = this.repo.findAll();
 		
 		String jsonParaEnviarAlFrontend = mapper.writeValueAsString(listado);
 		response.getWriter().print(jsonParaEnviarAlFrontend);
@@ -98,36 +86,29 @@ public class NuevoOradorController extends HttpServlet{
 		
 		String id = request.getParameter("id");
 		
-		String jsonOrador = request.getReader()
-				.lines()
-				.collect(Collectors.joining(System.lineSeparator()));//spring
+		String jsonComprador = super.toJson(request);//spring
 		
-		//Convertimos de json String a Objeto java usando libreria jackson2
-		//Hacemos un ObjectMapper
-		ObjectMapper mapper = new ObjectMapper();
-		
-		//Estas 2 lineas nos permite convertir las respuestas de LocalDate
-		//Y permitir la escritura de TIMESTAMPS
-		mapper.registerModule(new JavaTimeModule());
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		
 		//Esto finalmente nos convierte el Json a Objeto
-		OradorRequest oR = mapper.readValue(jsonOrador, OradorRequest.class);
+		CompradorRequest oR = mapper.readValue(jsonComprador, CompradorRequest.class);
 		
 		//busco el orador en la db
-		Orador orador = this.repo.getById(Long.parseLong(id));
+		Comprador comprador = this.repo.getById(Long.parseLong(id));
 		
 		//ahora actualizo los datos
-		orador.setNombre(oR.getNombre());
-		orador.setApellido(oR.getApellido());
-		orador.setMail(oR.getMail());
-		orador.setTema(oR.getTema());
+		comprador.setNombre(oR.getNombre());
+		comprador.setApellido(oR.getApellido());
+		comprador.setEmail(oR.getEmail());
+		comprador.setCantidad(oR.getCantidad());
+		comprador.setCategoria(oR.getCategoria());
+		comprador.setPrecioTotal(oR.getPrecioTotal());
 		
 		//ahora actualizo en la db
-		this.repo.update(orador);
+		this.repo.update(comprador);
 		
 		//informo al front el ok
 		response.setStatus(HttpServletResponse.SC_OK); // STATUS 200
 	}
 
 }
+
